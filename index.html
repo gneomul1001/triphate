@@ -13,13 +13,13 @@
         .yeogi-border-orange { border-color: #ff5a22; }
         .hidden { display: none; }
         .drag-over { background-color: #ffedd5 !important; border: 2px dashed #ff5a22 !important; }
-        /* 가로 스크롤바 숨기기 스타일 */
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
 </head>
 <body class="pb-24">
 
+<!-- 상단 헤더 & 검색 바 -->
 <header class="yeogi-orange text-white p-4 sticky top-0 z-50 shadow-md">
     <div class="max-w-4xl mx-auto flex flex-col gap-3">
         <div class="flex justify-between items-center">
@@ -31,23 +31,26 @@
             </div>
         </div>
         
+        <!-- 검색 영역 -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
             <div class="relative">
                 <input type="text" id="search-keyword" placeholder="어디로 떠나고 싶으신가요? (관광지/숙소/식당)" class="w-full p-3 rounded-lg text-black focus:outline-none text-sm shadow-inner pl-9">
                 <span class="absolute left-3 top-3.5 text-xs">🔍</span>
             </div>
             <div class="relative flex gap-1">
-                <select id="search-region-select" class="p-3 rounded-lg text-black focus:outline-none text-sm shadow-inner bg-white font-bold w-1/3">
-                    <option value="all">전체 지역</option>
+                <select id="search-country-select" class="p-3 rounded-lg text-black focus:outline-none text-sm shadow-inner bg-white font-bold w-full">
+                    <option value="all">모든 국가 전체 탐색</option>
                 </select>
-                <button onclick="executeTotalSearch()" class="w-2/3 bg-gray-900 text-white font-bold rounded-lg text-sm hover:bg-gray-800 transition">검색하기</button>
+                <button onclick="executeTotalSearch()" class="w-1/2 bg-gray-900 text-white font-bold rounded-lg text-sm hover:bg-gray-800 transition">검색하기</button>
             </div>
         </div>
     </div>
 </header>
 
+<!-- 메인 컨텐츠 영역 -->
 <main class="max-w-4xl mx-auto p-4">
 
+    <!-- 1. 홈 섹션 -->
     <section id="home-section" class="block">
         <div class="grid grid-cols-4 gap-3 text-center my-6">
             <div onclick="loadCategoryPage('관광지')" class="bg-white p-4 rounded-xl shadow-sm cursor-pointer hover:scale-105 transition border hover:border-[#ff5a22]">
@@ -66,11 +69,11 @@
 
         <div class="mt-8">
             <h2 class="text-xl font-black text-gray-800 mb-4 flex items-center gap-2">🔥 이번 주 추천 여행지</h2>
-            <div id="recommend-container" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                </div>
+            <div id="recommend-container" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
         </div>
     </section>
 
+    <!-- 2. 검색 결과 섹션 -->
     <section id="search-result-section" class="hidden">
         <div class="flex justify-between items-end mb-4 border-b pb-2">
             <h2 class="text-xl font-black text-gray-800">통합 검색 결과</h2>
@@ -79,65 +82,89 @@
         <div id="search-results-container" class="grid gap-4"></div>
     </section>
 
+    <!-- 3. 카테고리 상세 목록 섹션 -->
     <section id="category-list-section" class="hidden">
         <div class="flex justify-between items-center mb-4">
             <h2 id="current-category-title" class="text-xl font-black text-gray-800">카테고리</h2>
             <button onclick="showAddItemModal()" class="yeogi-orange text-white px-3 py-1.5 rounded-lg text-xs font-bold shadow-sm">+ 정보 추가</button>
         </div>
 
-        <div class="bg-white p-4 shadow-sm rounded-xl mb-4 border flex flex-col gap-2">
-            <div class="flex justify-between items-center flex-wrap gap-2">
-                <span class="text-xs text-gray-400 font-bold">📍 탐색할 대도시/지역을 선택하거나 관리하세요.</span>
+        <!-- 🗺️ 계층형 지역 대단위 관리 영역 (국가 -> 시/도 -> 시/군/구) -->
+        <div class="bg-white p-4 shadow-sm rounded-xl mb-4 border flex flex-col gap-3">
+            <div class="flex justify-between items-center flex-wrap gap-2 border-b pb-2">
+                <span class="text-xs text-gray-700 font-black">📍 1단계: 국가 선택</span>
                 <div class="flex gap-1">
-                    <button onclick="addNewRegionDirect()" class="bg-emerald-500 text-white px-2 py-1 rounded text-[11px] font-bold shadow-sm hover:bg-emerald-600">➕ 지역추가</button>
-                    <button onclick="showEditRegionModal()" class="bg-blue-500 text-white px-2 py-1 rounded text-[11px] font-bold shadow-sm hover:bg-blue-600">✏️ 지역수정</button>
-                    <button onclick="showDeleteRegionModal()" class="bg-red-500 text-white px-2 py-1 rounded text-[11px] font-bold shadow-sm hover:bg-red-600">❌ 지역삭제</button>
+                    <button onclick="manageHierarchy('country', 'add')" class="bg-emerald-600 text-white px-2 py-0.5 rounded text-[10px] font-bold">+ 추가</button>
+                    <button onclick="manageHierarchy('country', 'edit')" class="bg-blue-600 text-white px-2 py-0.5 rounded text-[10px] font-bold">✏️ 수정</button>
+                    <button onclick="manageHierarchy('country', 'delete')" class="bg-red-600 text-white px-2 py-0.5 rounded text-[10px] font-bold">× 삭제</button>
                 </div>
             </div>
-            <div id="region-scroll-box" class="flex gap-2 overflow-x-auto p-1 no-scrollbar border-t pt-2"></div>
+            <div id="scroll-country-box" class="flex gap-2 overflow-x-auto p-1 no-scrollbar"></div>
+
+            <div class="flex justify-between items-center flex-wrap gap-2 border-b pb-2 pt-1">
+                <span class="text-xs text-gray-700 font-black">🏙️ 2단계: 시 / 도 선택</span>
+                <div class="flex gap-1">
+                    <button onclick="manageHierarchy('city', 'add')" class="bg-emerald-600 text-white px-2 py-0.5 rounded text-[10px] font-bold">+ 추가</button>
+                    <button onclick="manageHierarchy('city', 'edit')" class="bg-blue-600 text-white px-2 py-0.5 rounded text-[10px] font-bold">✏️ 수정</button>
+                    <button onclick="manageHierarchy('city', 'delete')" class="bg-red-600 text-white px-2 py-0.5 rounded text-[10px] font-bold">× 삭제</button>
+                </div>
+            </div>
+            <div id="scroll-city-box" class="flex gap-2 overflow-x-auto p-1 no-scrollbar"></div>
+
+            <div class="flex justify-between items-center flex-wrap gap-2 border-b pb-2 pt-1">
+                <span class="text-xs text-gray-700 font-black">🏡 3단계: 시 / 군 / 구 / 동 선택</span>
+                <div class="flex gap-1">
+                    <button onclick="manageHierarchy('district', 'add')" class="bg-emerald-600 text-white px-2 py-0.5 rounded text-[10px] font-bold">+ 추가</button>
+                    <button onclick="manageHierarchy('district', 'edit')" class="bg-blue-600 text-white px-2 py-0.5 rounded text-[10px] font-bold">✏️ 수정</button>
+                    <button onclick="manageHierarchy('district', 'delete')" class="bg-red-600 text-white px-2 py-0.5 rounded text-[10px] font-bold">× 삭제</button>
+                </div>
+            </div>
+            <div id="scroll-district-box" class="flex gap-2 overflow-x-auto p-1 no-scrollbar"></div>
         </div>
 
+        <!-- 📁 하위 서브 분류 테마 관리 영역 -->
         <div class="bg-white p-4 shadow-sm rounded-xl mb-4 border flex flex-col gap-2">
             <div class="flex justify-between items-center flex-wrap gap-2">
-                <span class="text-xs text-gray-400 font-bold">📁 세부 서브 카테고리를 분류 필터링하세요.</span>
+                <span class="text-xs text-gray-500 font-bold">📁 세부 서브 테마 카테고리</span>
                 <div class="flex gap-1">
-                    <button onclick="addNewSubCategoryDirect()" class="bg-amber-500 text-white px-2 py-1 rounded text-[11px] font-bold shadow-sm hover:bg-amber-600">➕ 분류추가</button>
-                    <button onclick="showEditSubCategoryModal()" class="bg-indigo-500 text-white px-2 py-1 rounded text-[11px] font-bold shadow-sm hover:bg-indigo-600">✏️ 분류수정</button>
-                    <button onclick="showDeleteSubCategoryModal()" class="bg-rose-500 text-white px-2 py-1 rounded text-[11px] font-bold shadow-sm hover:bg-rose-600">❌ 분류삭제</button>
+                    <button onclick="addNewSubCategoryDirect()" class="bg-amber-500 text-white px-2 py-0.5 rounded text-[10px] font-bold">+ 추가</button>
+                    <button onclick="showEditSubCategoryModal()" class="bg-indigo-500 text-white px-2 py-0.5 rounded text-[10px] font-bold">✏️ 수정</button>
+                    <button onclick="showDeleteSubCategoryModal()" class="bg-rose-500 text-white px-2 py-0.5 rounded text-[10px] font-bold">× 삭제</button>
                 </div>
             </div>
             <div id="subcategory-scroll-box" class="flex gap-2 overflow-x-auto p-1 no-scrollbar border-t pt-2"></div>
         </div>
 
+        <!-- 아이템 그리드 리스트 -->
         <div id="items-container" class="grid gap-4 mt-4"></div>
     </section>
 
+    <!-- 4. 상품 상세 보기 섹션 -->
     <section id="item-detail-section" class="hidden">
         <div id="item-info-view" class="bg-white p-6 rounded-xl shadow-sm border mb-4"></div>
-        
         <div id="flight-simulator-box" class="bg-white p-6 rounded-xl shadow-sm border mb-4 hidden">
             <h3 class="font-black text-gray-800 text-base mb-3 border-b pb-2">✈️ 실시간 가짜 항공권 편명 스케줄</h3>
             <div class="grid gap-3" id="flight-ticket-list"></div>
         </div>
-
         <div id="normal-booking-box" class="bg-white p-5 rounded-xl border shadow-sm flex flex-col gap-3">
             <div class="flex justify-between items-center">
                 <div>
-                    <span class="text-xs text-gray-400 font-bold">체크인/이용 희망일 선택</span>
+                    <span class="text-xs text-gray-400 font-bold">이용 희망일 선택</span>
                     <input type="date" class="block border rounded p-2 text-xs mt-1 font-bold focus:outline-none" value="2026-06-06">
                 </div>
                 <div class="text-right">
-                    <p class="text-xs text-gray-400 font-bold">1인/1박 기준 요금</p>
+                    <p class="text-xs text-gray-400 font-bold">가상 요금</p>
                     <p id="detail-price-text" class="text-xl font-black yeogi-text-orange">0원</p>
                 </div>
             </div>
             <div class="flex gap-2">
-                <button onclick="addItemToStorage()" class="flex-1 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-bold rounded-lg transition">🧳 보관함에 저장</button>
-                <button onclick="triggerFakeBookingSimulation()" class="flex-1 py-3 yeogi-orange hover:bg-orange-600 text-white text-sm font-bold rounded-lg shadow-md transition">⚡ 실시간 즉시 예약하기</button>
+                <button onclick="addItemToStorage()" class="flex-1 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-bold rounded-lg transition">🧳 보관함 저장</button>
+                <button onclick="triggerFakeBookingSimulation()" class="flex-1 py-3 yeogi-orange hover:bg-orange-600 text-white text-sm font-bold rounded-lg shadow-md transition">⚡ 가상 예약하기</button>
             </div>
         </div>
     </section>
 
+    <!-- 5. 보관함 섹션 -->
     <section id="storage-section" class="hidden">
         <h2 class="text-xl font-black mb-4">내 보관함 플래너</h2>
         <div id="storage-items-list" class="bg-white p-4 rounded-xl shadow-sm border mb-4"></div>
@@ -148,6 +175,7 @@
         <button onclick="triggerFakeBookingSimulation()" class="w-full py-4 yeogi-orange text-white text-base font-black rounded-xl shadow-lg hover:bg-orange-600 transition">📝 가상 여행 일정 전체 일괄 예약</button>
     </section>
 
+    <!-- 6. 예약 처리 상태 시뮬레이션 섹션 -->
     <section id="booking-status-section" class="hidden text-center p-10 bg-white rounded-xl border shadow-sm">
         <div class="text-6xl mb-4 animate-bounce">🚀</div>
         <h2 id="status-headline" class="text-2xl font-black mb-2 text-gray-800">예약 신호 전송 중...</h2>
@@ -157,12 +185,13 @@
         </div>
         <div id="simulation-fail-notice" class="hidden max-w-md mx-auto p-4 bg-red-50 text-red-700 rounded-lg text-xs font-bold leading-relaxed mb-6 border border-red-100">
             ❌ [예약 시스템 작동 불능 예외 안내]<br>
-            본 플랫폼은 데이터 영속성 관리 프로토콜이 적용된 프론트엔드 모조 목업(Mock-up) 소프트웨어입니다. 암호화 서명 프로토콜 부재 및 실결제 API 통신 미동기 상태이므로 실제 여정이 확약되지 않습니다.
+            본 플랫폼은 데이터 영속성 관리 프로토콜이 적용된 프론트엔드 모조 목업(Mock-up) 소프트웨어입니다. 실제 결제 및 예약이 불가능합니다.
         </div>
         <button onclick="showSection('home-section')" class="w-full max-w-md py-3 bg-gray-900 text-white rounded-lg font-bold hover:bg-gray-800 transition">🏠 처음 메인 화면으로 이동</button>
     </section>
 </main>
 
+<!-- 📱 하단 탭 바 -->
 <nav class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-xl z-40">
     <div class="max-w-4xl mx-auto grid grid-cols-5 text-center text-[10px] font-bold text-gray-500">
         <button onclick="showSection('home-section')" class="py-2.5 flex flex-col items-center gap-0.5 hover:text-[#ff5a22]">
@@ -183,21 +212,36 @@
     </div>
 </nav>
 
-<div id="global-modal" class="fixed inset-0 bg-black bg-opacity-60 hidden flex items-center justify-center p-4 z-[100] animate-fade-in">
+<!-- 공용 모달창 -->
+<div id="global-modal" class="fixed inset-0 bg-black bg-opacity-60 hidden flex items-center justify-center p-4 z-[100]">
     <div class="bg-white w-full max-w-md p-6 rounded-2xl shadow-2xl">
         <h3 id="modal-headline" class="text-lg font-black mb-4 text-gray-900">입력 창</h3>
         <div id="modal-body-content" class="flex flex-col gap-3 max-h-[55vh] overflow-y-auto pr-1"></div>
         <div class="flex gap-2 mt-6">
             <button onclick="closeGlobalModal()" class="flex-1 py-2.5 bg-gray-100 text-gray-700 rounded-xl font-bold hover:bg-gray-200 transition">취소</button>
-            <button id="modal-action-confirm-btn" class="flex-1 py-2.5 yeogi-orange text-white rounded-xl font-bold hover:bg-orange-600 transition">확인 완료</button>
+            <button id="modal-action-confirm-btn" class="flex-1 py-2.5 yeogi-orange text-white rounded-xl font-bold hover:bg-orange-600 transition">확인</button>
         </div>
     </div>
 </div>
 
 <script>
-    // 기본 모크 업 초기 데이터베이스 스케마 정의
-    let db = JSON.parse(localStorage.getItem('yeogi_siro_db_v1')) || {
-        regions: ["제주도", "부산", "서울", "강릉", "도쿄", "파리"],
+    // 3단계 지역 구조가 내장된 최적화 데이터베이스 데이터셋
+    let db = JSON.parse(localStorage.getItem('yeogi_siro_db_v2')) || {
+        // [국가] -> [시/도] -> [시/군/구/동] 계층 데이터 스케마
+        geoHierarchy: {
+            "대한민국": {
+                "부산광역시": ["해운대구", "부산진구", "수영구", "기장군"],
+                "서울특별시": ["강남구", "종로구", "마포구", "성북구"],
+                "제주특별자치도": ["제주시", "서귀포시"]
+            },
+            "일본": {
+                "도쿄도": ["신주쿠구", "시부야구", "긴자"],
+                "오사카부": ["우메다", "난바"]
+            },
+            "프랑스": {
+                "일드프랑스": ["파리 1구", "파리 7구", "몽마르트르"]
+            }
+        },
         subCategories: {
             "관광지": ["자연/명소", "박물관/역사", "액티비티", "테마파크"],
             "숙소": ["5성급 호텔", "감성 펜션", "게스트하우스", "리조트"],
@@ -205,31 +249,34 @@
             "항공권": ["대한항공", "아시아나", "저비용항공(LCC)", "외항사"]
         },
         travelItems: [
-            { id: 101, mainCat: "관광지", region: "제주도", subCat: "자연/명소", name: "성산일출봉 광치기해변", price: 0, score: "4.9", description: "성산일출봉을 배경으로 멋진 인생 사진과 낙타 체험이 가능한 천연 암반 해변지대입니다.", img: "https://images.unsplash.com/photo-1571746242326-62a8ef7ebd43?w=500&auto=format&fit=crop" },
-            { id: 102, mainCat: "숙소", region: "부산", subCat: "5성급 호텔", name: "시그니엘 부산 해운대", price: 340000, score: "5.0", description: "탁 트인 해운대 오션뷰와 최고의 미식 슬롯을 자랑하는 최고급 럭셔리 호캉스 목적지.", img: "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=500&auto=format&fit=crop" },
-            { id: 103, mainCat: "맛집", region: "서울", subCat: "파인 다이닝", name: "정식당 청담", price: 180000, score: "4.8", description: "독창적인 한식 크리에이티브 뉴 클래식 요리를 구현하는 파인다이닝 명소.", img: "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=500&auto=format&fit=crop" }
+            { id: 1, mainCat: "관광지", country: "대한민국", city: "제주특별자치도", district: "제주시", subCat: "자연/명소", name: "협재해수욕장 야자수길", price: 0, score: "4.9", description: "은빛 모래와 에메랄드빛 바다, 그리고 아름다운 비양도가 한눈에 들어오는 서부 필수 코스.", img: "https://images.unsplash.com/photo-1571746242326-62a8ef7ebd43?w=500&auto=format&fit=crop" },
+            { id: 2, mainCat: "숙소", country: "대한민국", city: "부산광역시", district: "해운대구", subCat: "5성급 호텔", name: "시그니엘 부산 해운대", price: 340000, score: "5.0", description: "탁 트인 해운대 오션뷰를 만끽하는 최고급 호캉스 랜드마크.", img: "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=500&auto=format&fit=crop" },
+            { id: 3, mainCat: "맛집", country: "대한민국", city: "서울특별시", district: "강남구", subCat: "파인 다이닝", name: "정식당 청담", price: 180000, score: "4.8", description: "독창적인 미식의 신세계를 보여주는 한식 뉴클래식 크리에이티브 다이닝.", img: "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=500&auto=format&fit=crop" }
         ],
         storage: []
     };
 
     let currentMainCategory = "관광지";
-    let selectedRegionFilter = "all";
+    
+    // 현재 선택된 필터 포인터 스케마
+    let selCountry = "all";
+    let selCity = "all";
+    let selDistrict = "all";
     let selectedSubCategoryFilter = "all";
     let currentActiveItemId = null;
 
     function initApp() {
-        renderGlobalRegionSelect();
+        renderGlobalCountrySelect();
         renderRecommendList();
         updateStorageBadgeCount();
     }
 
-    // 전역 지역 셀렉트 컴포넌트 동기화
-    function renderGlobalRegionSelect() {
-        const select = document.getElementById('search-region-select');
-        select.innerHTML = '<option value="all">전체 지역</option>';
-        db.regions.forEach(r => {
+    function renderGlobalCountrySelect() {
+        const select = document.getElementById('search-country-select');
+        select.innerHTML = '<option value="all">모든 국가 전체 탐색</option>';
+        Object.keys(db.geoHierarchy).forEach(c => {
             const opt = document.createElement('option');
-            opt.value = r; opt.innerText = r;
+            opt.value = c; opt.innerText = c;
             select.appendChild(opt);
         });
     }
@@ -241,17 +288,13 @@
         if(id === 'storage-section') renderStorageItems();
     }
 
-    // 메인 홈용 추천 리스트 바인딩
     function renderRecommendList() {
         const box = document.getElementById('recommend-container');
         box.innerHTML = "";
-        
-        // 데이터가 비었을 때 예외 처리
         if(db.travelItems.length === 0) {
-            box.innerHTML = "<p class='text-gray-400 text-xs col-span-2 text-center py-6'>현재 등록된 추천 코스가 없습니다.</p>";
+            box.innerHTML = "<p class='text-gray-400 text-xs col-span-2 text-center py-6'>등록된 추천 코스가 없습니다.</p>";
             return;
         }
-
         db.travelItems.slice(0, 4).forEach(item => {
             const card = document.createElement('div');
             card.className = "bg-white rounded-xl shadow-sm overflow-hidden border cursor-pointer hover:scale-[1.01] transition";
@@ -259,12 +302,12 @@
             card.innerHTML = `
                 <img src="${item.img || 'https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=500&auto=format&fit=crop'}" class="w-full h-40 object-cover bg-gray-100">
                 <div class="p-4">
-                    <span class="text-[10px] bg-orange-100 yeogi-text-orange font-bold px-2 py-0.5 rounded-full">${item.region} | ${item.mainCat}</span>
+                    <span class="text-[9px] bg-orange-100 yeogi-text-orange font-bold px-2 py-0.5 rounded-full">${item.country} · ${item.district}</span>
                     <h3 class="font-bold text-gray-800 text-sm mt-1.5">${item.name}</h3>
                     <p class="text-xs text-gray-400 mt-1 line-clamp-1">${item.description}</p>
                     <div class="flex justify-between items-center mt-3 pt-2 border-t text-xs">
                         <span class="font-bold text-yellow-500">⭐ ${item.score}</span>
-                        <span class="font-black text-gray-700">${item.price > 0 ? item.price.toLocaleString()+'원' : '입장 무료'}</span>
+                        <span class="font-black text-gray-700">${item.price > 0 ? item.price.toLocaleString()+'원' : '무료'}</span>
                     </div>
                 </div>
             `;
@@ -272,21 +315,20 @@
         });
     }
 
-    // 통합 상단 엔진 검색 로직
     function executeTotalSearch() {
         const keyword = document.getElementById('search-keyword').value.trim();
-        const region = document.getElementById('search-region-select').value;
+        const country = document.getElementById('search-country-select').value;
 
         showSection('search-result-section');
         const container = document.getElementById('search-results-container');
         container.innerHTML = "";
 
         let results = db.travelItems;
-        if(region !== 'all') results = results.filter(r => r.region === region);
-        if(keyword) results = results.filter(r => r.name.includes(keyword) || r.description.includes(keyword) || r.subCat.includes(keyword));
+        if(country !== 'all') results = results.filter(r => r.country === country);
+        if(keyword) results = results.filter(r => r.name.includes(keyword) || r.description.includes(keyword));
 
         if(results.length === 0) {
-            container.innerHTML = "<div class='text-center py-12 text-gray-400 font-bold text-sm'>일치하는 가짜 여정 데이터가 매칭되지 않았습니다.</div>";
+            container.innerHTML = "<div class='text-center py-12 text-gray-400 font-bold text-sm'>일치하는 여정 정보가 없습니다.</div>";
             return;
         }
 
@@ -297,7 +339,7 @@
             div.innerHTML = `
                 <img src="${item.img || 'https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=500&auto=format&fit=crop'}" class="w-16 h-16 object-cover rounded-xl bg-gray-100">
                 <div class="flex-1">
-                    <span class="text-[9px] text-gray-400 font-bold block">[${item.region}] ${item.mainCat} > ${item.subCat}</span>
+                    <span class="text-[9px] text-gray-400 font-bold block">${item.country} > ${item.city} > ${item.district}</span>
                     <h4 class="font-bold text-gray-800 text-sm mt-0.5">${item.name}</h4>
                     <p class="text-xs yeogi-text-orange font-black mt-1">${item.price > 0 ? item.price.toLocaleString()+'원' : '비용 없음'}</p>
                 </div>
@@ -306,254 +348,363 @@
         });
     }
 
-    // 대카테고리 네비게이션 스위칭 엔트리
     function loadCategoryPage(catName) {
         currentMainCategory = catName;
-        selectedRegionFilter = "all";
-        selectedSubCategoryFilter = "all";
+        selCountry = "all"; selCity = "all"; selDistrict = "all"; selectedSubCategoryFilter = "all";
         
         showSection('category-list-section');
-        document.getElementById('current-category-title').innerText = `✈️ ${catName} 추천 카테고리`;
+        document.getElementById('current-category-title').innerText = `✈️ ${catName} 탐색 센터`;
         
-        renderScrollRegionButtons();
+        refreshGeoScrollBoxes();
         renderScrollSubCategoryButtons();
         renderFilteredItemsGrid();
     }
 
-    // 분리형 상위 스크롤바(지역) 가로 스크롤 동적 빌더
-    function renderScrollRegionButtons() {
-        const box = document.getElementById('region-scroll-box');
+    // 🌊 계층형 스크롤바 렌더링 파이프라인
+    function refreshGeoScrollBoxes() {
+        renderCountryScroll();
+        renderCityScroll();
+        renderDistrictScroll();
+    }
+
+    // 1단계: 국가 스크롤바
+    function renderCountryScroll() {
+        const box = document.getElementById('scroll-country-box');
         box.innerHTML = "";
 
         const allBtn = document.createElement('button');
-        allBtn.className = `px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all ${selectedRegionFilter === 'all' ? 'yeogi-orange text-white shadow-sm' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`;
-        allBtn.innerText = "🌐 전체지역 보기";
-        allBtn.onclick = () => { selectedRegionFilter = "all"; renderScrollRegionButtons(); renderFilteredItemsGrid(); };
+        allBtn.className = `px-3 py-1 rounded-full text-xs font-bold whitespace-nowrap ${selCountry === 'all' ? 'yeogi-orange text-white' : 'bg-gray-100 text-gray-600'}`;
+        allBtn.innerText = "🌐 국가 전체";
+        allBtn.onclick = () => { selCountry = "all"; selCity = "all"; selDistrict = "all"; refreshGeoScrollBoxes(); renderFilteredItemsGrid(); };
         box.appendChild(allBtn);
 
-        db.regions.forEach(r => {
+        Object.keys(db.geoHierarchy).forEach(c => {
             const btn = document.createElement('button');
-            btn.className = `px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all ${selectedRegionFilter === r ? 'yeogi-orange text-white shadow-sm' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`;
-            btn.innerText = `📍 ${r}`;
-            btn.onclick = () => { selectedRegionFilter = r; renderScrollRegionButtons(); renderFilteredItemsGrid(); };
+            btn.className = `px-3 py-1 rounded-full text-xs font-bold whitespace-nowrap ${selCountry === c ? 'yeogi-orange text-white' : 'bg-gray-100 text-gray-600'}`;
+            btn.innerText = c;
+            btn.onclick = () => { selCountry = c; selCity = "all"; selDistrict = "all"; refreshGeoScrollBoxes(); renderFilteredItemsGrid(); };
             box.appendChild(btn);
         });
     }
 
-    // 분리형 하위 스크롤바(서브 종류) 가로 스크롤 동적 빌더
+    // 2단계: 시/도 스크롤바
+    function renderCityScroll() {
+        const box = document.getElementById('scroll-city-box');
+        box.innerHTML = "";
+
+        if(selCountry === 'all') {
+            box.innerHTML = "<span class='text-xs text-gray-400 font-bold p-1'>← 먼저 국가를 선택하시면 활성화됩니다.</span>";
+            return;
+        }
+
+        const allBtn = document.createElement('button');
+        allBtn.className = `px-3 py-1 rounded-full text-xs font-bold whitespace-nowrap ${selCity === 'all' ? 'yeogi-orange text-white' : 'bg-gray-100 text-gray-600'}`;
+        allBtn.innerText = "🌆 시/도 전체";
+        allBtn.onclick = () => { selCity = "all"; selDistrict = "all"; renderCityScroll(); renderDistrictScroll(); renderFilteredItemsGrid(); };
+        box.appendChild(allBtn);
+
+        const cities = Object.keys(db.geoHierarchy[selCountry] || {});
+        cities.forEach(ct => {
+            const btn = document.createElement('button');
+            btn.className = `px-3 py-1 rounded-full text-xs font-bold whitespace-nowrap ${selCity === ct ? 'yeogi-orange text-white' : 'bg-gray-100 text-gray-600'}`;
+            btn.innerText = ct;
+            btn.onclick = () => { selCity = ct; selDistrict = "all"; renderCityScroll(); renderDistrictScroll(); renderFilteredItemsGrid(); };
+            box.appendChild(btn);
+        });
+    }
+
+    // 3단계: 시/군/구/동 스크롤바
+    function renderDistrictScroll() {
+        const box = document.getElementById('scroll-district-box');
+        box.innerHTML = "";
+
+        if(selCity === 'all') {
+            box.innerHTML = "<span class='text-xs text-gray-400 font-bold p-1'>← 먼저 시/도를 선택하시면 활성화됩니다.</span>";
+            return;
+        }
+
+        const allBtn = document.createElement('button');
+        allBtn.className = `px-3 py-1 rounded-full text-xs font-bold whitespace-nowrap ${selDistrict === 'all' ? 'yeogi-orange text-white' : 'bg-gray-100 text-gray-600'}`;
+        allBtn.innerText = "🏡 시/군/구/동 전체";
+        allBtn.onclick = () => { selDistrict = "all"; renderDistrictScroll(); renderFilteredItemsGrid(); };
+        box.appendChild(allBtn);
+
+        const districts = db.geoHierarchy[selCountry][selCity] || [];
+        districts.forEach(d => {
+            const btn = document.createElement('button');
+            btn.className = `px-3 py-1 rounded-full text-xs font-bold whitespace-nowrap ${selDistrict === d ? 'yeogi-orange text-white' : 'bg-gray-100 text-gray-600'}`;
+            btn.innerText = d;
+            btn.onclick = () => { selDistrict = d; renderDistrictScroll(); renderFilteredItemsGrid(); };
+            box.appendChild(btn);
+        });
+    }
+
     function renderScrollSubCategoryButtons() {
         const box = document.getElementById('subcategory-scroll-box');
         box.innerHTML = "";
-
         const allBtn = document.createElement('button');
-        allBtn.className = `px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all ${selectedSubCategoryFilter === 'all' ? 'bg-slate-800 text-white shadow-sm' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`;
-        allBtn.innerText = "📁 전체테마 보기";
+        allBtn.className = `px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap ${selectedSubCategoryFilter === 'all' ? 'bg-slate-800 text-white' : 'bg-gray-100 text-gray-600'}`;
+        allBtn.innerText = "📁 전체 테마";
         allBtn.onclick = () => { selectedSubCategoryFilter = "all"; renderScrollSubCategoryButtons(); renderFilteredItemsGrid(); };
         box.appendChild(allBtn);
 
-        const subList = db.subCategories[currentMainCategory] || [];
-        subList.forEach(sc => {
+        (db.subCategories[currentMainCategory] || []).forEach(sc => {
             const btn = document.createElement('button');
-            btn.className = `px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all ${selectedSubCategoryFilter === sc ? 'bg-slate-800 text-white shadow-sm' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`;
-            btn.innerText = `🏷️ ${sc}`;
+            btn.className = `px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap ${selectedSubCategoryFilter === sc ? 'bg-slate-800 text-white' : 'bg-gray-100 text-gray-600'}`;
+            btn.innerText = sc;
             btn.onclick = () => { selectedSubCategoryFilter = sc; renderScrollSubCategoryButtons(); renderFilteredItemsGrid(); };
             box.appendChild(btn);
         });
     }
 
-    // 메인 아이템 필터링 그리드 연산 제어
+    // 🎛️ 계층형 데이터 종합 필터링 그리드 연동
     function renderFilteredItemsGrid() {
         const container = document.getElementById('items-container');
         container.innerHTML = "";
 
         let list = db.travelItems.filter(item => item.mainCat === currentMainCategory);
-        if(selectedRegionFilter !== 'all') list = list.filter(item => item.region === selectedRegionFilter);
+        if(selCountry !== 'all') list = list.filter(item => item.country === selCountry);
+        if(selCity !== 'all') list = list.filter(item => item.city === selCity);
+        if(selDistrict !== 'all') list = list.filter(item => item.district === selDistrict);
         if(selectedSubCategoryFilter !== 'all') list = list.filter(item => item.subCat === selectedSubCategoryFilter);
 
         if(list.length === 0) {
-            container.innerHTML = `
-                <div class="bg-white p-12 text-center text-gray-400 text-xs rounded-xl border border-dashed col-span-full">
-                    해당 통합 필터에 일치하는 등록 작품/여행지 정보가 존재하지 않습니다. 상단에서 신규로 구성해 보세요!
-                </div>`;
+            container.innerHTML = `<div class='col-span-full border border-dashed bg-white p-10 text-center text-xs font-bold text-gray-400 rounded-xl'>필터와 매칭되는 가짜 데이터 코스가 부재합니다.</div>`;
             return;
         }
 
         list.forEach(res => {
             const card = document.createElement('div');
             card.className = "bg-white p-4 rounded-xl shadow-sm border flex gap-4 items-center justify-between";
-            
             const infoDiv = document.createElement('div');
             infoDiv.className = "flex gap-4 flex-1 items-center cursor-pointer";
             infoDiv.onclick = () => showItemDetailView(res.id);
 
-            const imgHtml = res.img 
-                ? `<img src="${res.img}" class="w-16 h-16 object-cover rounded-xl shadow-inner bg-gray-50">`
-                : `<div class="w-16 h-16 bg-gray-100 rounded-xl flex items-center justify-center text-xl">🖼️</div>`;
+            const imgHtml = res.img ? `<img src="${res.img}" class="w-16 h-16 object-cover rounded-xl bg-gray-50">` : `<div class="w-16 h-16 bg-gray-100 rounded-xl flex items-center justify-center">🖼️</div>`;
 
             infoDiv.innerHTML = `
                 ${imgHtml}
                 <div>
-                    <span class="text-[9px] font-bold text-blue-500">[${res.region}] ${res.subCat}</span>
+                    <span class="text-[9px] font-black text-blue-500">[${res.country} · ${res.district}] ${res.subCat}</span>
                     <h3 class="font-black text-gray-800 text-sm mt-0.5">${res.name}</h3>
                     <p class="text-xs text-gray-400 line-clamp-1 mt-0.5">${res.description}</p>
-                    <p class="text-xs font-black yeogi-text-orange mt-1">${res.price > 0 ? res.price.toLocaleString()+'원' : '예약 비용 없음'}</p>
+                    <p class="text-xs font-black yeogi-text-orange mt-1">${res.price > 0 ? res.price.toLocaleString()+'원' : '비용 없음'}</p>
                 </div>
             `;
             card.appendChild(infoDiv);
 
-            // 수정/삭제 어드민 버튼 슬롯
             const btnGroup = document.createElement('div');
             btnGroup.className = "flex flex-col gap-1 pl-2 border-l";
             btnGroup.innerHTML = `
-                <button onclick="showEditItemModal(${res.id})" class="text-[10px] px-2 py-1 border border-blue-200 rounded-md bg-white text-blue-500 font-bold hover:bg-blue-50">수정</button>
-                <button onclick="deleteTravelItem(${res.id})" class="text-[10px] px-2 py-1 border border-red-200 rounded-md bg-white text-red-500 font-bold hover:bg-red-50">삭제</button>
+                <button onclick="showEditItemModal(${res.id})" class="text-[10px] px-2 py-1 border border-blue-200 rounded-md bg-white text-blue-500 font-bold">수정</button>
+                <button onclick="deleteTravelItem(${res.id})" class="text-[10px] px-2 py-1 border border-red-200 rounded-md bg-white text-red-500 font-bold">삭제</button>
             `;
             card.appendChild(btnGroup);
             container.appendChild(card);
         });
     }
 
-    // 📍 1) 상위 카테고리 (지역) 직접 추가 제어 코어
-    function addNewRegionDirect() {
-        const name = prompt("새로 편입할 도시/지역명을 명명하십시오:");
-        if(name && name.trim() !== "") {
-            if(!db.regions.includes(name.trim())) {
-                db.regions.push(name.trim()); saveDB();
-                renderGlobalRegionSelect(); renderScrollRegionButtons();
-            } else { alert("이미 존재하는 대상 지역 식별자입니다."); }
+    // 🏗️ 1~3단계 지역 카테고리 기획형 인터페이스 분화 통합 제어기
+    function manageHierarchy(type, action) {
+        if(action === 'add') {
+            if(type === 'city' && selCountry === 'all') return alert("먼저 상위 '국가'를 선택하셔야 합니다.");
+            if(type === 'district' && selCity === 'all') return alert("먼저 상위 '시/도'를 선택하셔야 합니다.");
+            
+            const name = prompt("새롭게 주입할 식별 이름을 명명하십시오:");
+            if(!name || !name.trim()) return;
+
+            if(type === 'country') {
+                if(!db.geoHierarchy[name]) db.geoHierarchy[name] = {};
+            } else if(type === 'city') {
+                if(!db.geoHierarchy[selCountry][name]) db.geoHierarchy[selCountry][name] = [];
+            } else if(type === 'district') {
+                if(!db.geoHierarchy[selCountry][selCity].includes(name)) db.geoHierarchy[selCountry][selCity].push(name);
+            }
+            saveDB(); refreshGeoScrollBoxes(); renderGlobalCountrySelect();
+        } 
+        else if(action === 'edit') {
+            if(type === 'country' && selCountry === 'all') return alert("수정할 국가 타겟을 가로바에서 선택하세요.");
+            if(type === 'city' && selCity === 'all') return alert("수정할 시/도 타겟을 가로바에서 선택하세요.");
+            if(type === 'district' && selDistrict === 'all') return alert("수정할 시/군/구/동 타겟을 가로바에서 선택하세요.");
+
+            const newName = prompt("변경할 새 명칭을 부여하십시오:");
+            if(!newName || !newName.trim()) return;
+
+            if(type === 'country') {
+                db.geoHierarchy[newName] = db.geoHierarchy[selCountry];
+                delete db.geoHierarchy[selCountry];
+                db.travelItems.forEach(t => { if(t.country === selCountry) t.country = newName; });
+                selCountry = newName;
+            } else if(type === 'city') {
+                db.geoHierarchy[selCountry][newName] = db.geoHierarchy[selCountry][selCity];
+                delete db.geoHierarchy[selCountry][selCity];
+                db.travelItems.forEach(t => { if(t.country === selCountry && t.city === selCity) t.city = newName; });
+                selCity = newName;
+            } else if(type === 'district') {
+                const idx = db.geoHierarchy[selCountry][selCity].indexOf(selDistrict);
+                db.geoHierarchy[selCountry][selCity][idx] = newName;
+                db.travelItems.forEach(t => { if(t.country === selCountry && t.city === selCity && t.district === selDistrict) t.district = newName; });
+                selDistrict = newName;
+            }
+            saveDB(); refreshGeoScrollBoxes(); renderGlobalCountrySelect(); renderFilteredItemsGrid();
+        } 
+        else if(action === 'delete') {
+            if(type === 'country' && selCountry === 'all') return alert("파기할 국가를 가로바에서 선택하세요.");
+            if(type === 'city' && selCity === 'all') return alert("파기할 시/도를 가로바에서 선택하세요.");
+            if(type === 'district' && selDistrict === 'all') return alert("파기할 시/군/구/동을 가로바에서 선택하세요.");
+
+            if(confirm("이 지역 파생 노드를 통째로 삭제 말소 처리하시겠습니까? 소속 아이템들은 미분류 처리됩니다.")) {
+                if(type === 'country') {
+                    delete db.geoHierarchy[selCountry];
+                    db.travelItems.forEach(t => { if(t.country === selCountry) { t.country = "미분류"; t.city = "미분류"; t.district = "미분류"; }});
+                    selCountry = "all"; selCity = "all"; selDistrict = "all";
+                } else if(type === 'city') {
+                    delete db.geoHierarchy[selCountry][selCity];
+                    db.travelItems.forEach(t => { if(t.country === selCountry && t.city === selCity) { t.city = "미분류"; t.district = "미분류"; }});
+                    selCity = "all"; selDistrict = "all";
+                } else if(type === 'district') {
+                    db.geoHierarchy[selCountry][selCity] = db.geoHierarchy[selCountry][selCity].filter(d => d !== selDistrict);
+                    db.travelItems.forEach(t => { if(t.country === selCountry && t.city === selCity && t.district === selDistrict) t.district = "미분류"; });
+                    selDistrict = "all";
+                }
+                saveDB(); refreshGeoScrollBoxes(); renderGlobalCountrySelect(); renderFilteredItemsGrid();
+            }
         }
     }
 
-    function showEditRegionModal() {
-        let opts = db.regions.map((r, i) => `<option value="${i}">${r}</option>`).join('');
-        openGlobalModal("지정 상위 지역명 변경 수선", `
-            <select id="edit-region-idx" class="w-full border p-2 rounded-lg text-sm bg-white">${opts}</select>
-            <input id="edit-region-new-name" type="text" placeholder="새로운 지역 명칭 입력" class="w-full border p-2 rounded-lg text-sm">
-        `, () => {
-            const idx = parseInt(document.getElementById('edit-region-idx').value);
-            const newN = document.getElementById('edit-region-new-name').value.trim();
-            if(!newN) return alert("공백은 허용되지 않습니다.");
-            
-            const oldN = db.regions[idx];
-            db.travelItems.forEach(item => { if(item.region === oldN) item.region = newN; });
-            db.regions[idx] = newN; selectedRegionFilter = "all"; saveDB();
-            renderGlobalRegionSelect(); renderScrollRegionButtons(); renderFilteredItemsGrid(); closeGlobalModal();
-        });
-    }
-
-    function showDeleteRegionModal() {
-        let opts = db.regions.map((r, i) => `<option value="${i}">${r}</option>`).join('');
-        openGlobalModal("상위 지역 삭제 제어", `
-            <p class="text-xs text-red-500 font-bold">* 경고: 삭제 시 해당 소속 아이템들은 '미분류' 처리됩니다.</p>
-            <select id="del-region-idx" class="w-full border p-2 rounded-lg text-sm bg-white">${opts}</select>
-        `, () => {
-            const idx = parseInt(document.getElementById('del-region-idx').value);
-            const targetN = db.regions[idx];
-            if(confirm(`[${targetN}] 지역을 파기하시겠습니까?`)) {
-                db.travelItems.forEach(item => { if(item.region === targetN) item.region = "미분류"; });
-                db.regions.splice(idx, 1); selectedRegionFilter = "all"; saveDB();
-                renderGlobalRegionSelect(); renderScrollRegionButtons(); renderFilteredItemsGrid();
-            }
-            closeGlobalModal();
-        });
-    }
-
-    // 📁 2) 하위 카테고리 (분류/테마) CRUD 매니지먼트
+    // 📁 하위 서브 분류 테마 CRUD 
     function addNewSubCategoryDirect() {
-        const name = prompt(`현재 [${currentMainCategory}] 하위에 신규 지정할 테마/소분류명을 입력하세요:`);
-        if(name && name.trim() !== "") {
-            if(!db.subCategories[currentMainCategory]) db.subCategories[currentMainCategory] = [];
+        const name = prompt(`현재 [${currentMainCategory}] 하위의 신규 테마명을 입력하십시오:`);
+        if(name && name.trim()) {
             if(!db.subCategories[currentMainCategory].includes(name.trim())) {
-                db.subCategories[currentMainCategory].push(name.trim()); saveDB();
-                renderScrollSubCategoryButtons();
-            } else { alert("동일 카테고리 내에 존재하는 분류명입니다."); }
+                db.subCategories[currentMainCategory].push(name.trim()); saveDB(); renderScrollSubCategoryButtons();
+            }
         }
     }
 
     function showEditSubCategoryModal() {
-        const arr = db.subCategories[currentMainCategory] || [];
-        let opts = arr.map((c, i) => `<option value="${i}">${c}</option>`).join('');
-        openGlobalModal("하위 서브 카테고리 명칭 수선", `
+        let opts = db.subCategories[currentMainCategory].map((c, i) => `<option value="${i}">${c}</option>`).join('');
+        openGlobalModal("서브 테마 카테고리 수선", `
             <select id="edit-sub-idx" class="w-full border p-2 rounded-lg text-sm bg-white">${opts}</select>
             <input id="edit-sub-new-name" type="text" placeholder="변경할 분류명칭 명명" class="w-full border p-2 rounded-lg text-sm">
         `, () => {
             const idx = parseInt(document.getElementById('edit-sub-idx').value);
             const newN = document.getElementById('edit-sub-new-name').value.trim();
             if(!newN) return;
-            const oldN = arr[idx];
+            const oldN = db.subCategories[currentMainCategory][idx];
             db.travelItems.forEach(item => { if(item.mainCat === currentMainCategory && item.subCat === oldN) item.subCat = newN; });
-            arr[idx] = newN; selectedSubCategoryFilter = "all"; saveDB();
+            db.subCategories[currentMainCategory][idx] = newN; selectedSubCategoryFilter = "all"; saveDB();
             renderScrollSubCategoryButtons(); renderFilteredItemsGrid(); closeGlobalModal();
         });
     }
 
     function showDeleteSubCategoryModal() {
-        const arr = db.subCategories[currentMainCategory] || [];
-        let opts = arr.map((c, i) => `<option value="${i}">${c}</option>`).join('');
+        let opts = db.subCategories[currentMainCategory].map((c, i) => `<option value="${i}">${c}</option>`).join('');
         openGlobalModal("하위 테마 카테고리 삭제 파기", `
             <select id="del-sub-idx" class="w-full border p-2 rounded-lg text-sm bg-white">${opts}</select>
         `, () => {
             const idx = parseInt(document.getElementById('del-sub-idx').value);
-            const targetN = arr[idx];
-            if(confirm(`[${targetN}] 하위 분류를 파기 소멸하시겠습니까?`)) {
+            const targetN = db.subCategories[currentMainCategory][idx];
+            if(confirm(`[${targetN}] 분류를 삭제하시겠습니까?`)) {
                 db.travelItems.forEach(item => { if(item.mainCat === currentMainCategory && item.subCat === targetN) item.subCat = "미분류"; });
-                arr.splice(idx, 1); selectedSubCategoryFilter = "all"; saveDB();
+                db.subCategories[currentMainCategory].splice(idx, 1); selectedSubCategoryFilter = "all"; saveDB();
                 renderScrollSubCategoryButtons(); renderFilteredItemsGrid();
             }
             closeGlobalModal();
         });
     }
 
-    // 🌉 3) 가짜 여행 상품 자체 추가 (사진 파일 업로드 드래그 앤 드롭 내장)
+    // 🌉 가짜 여행 상품 자체 추가 (3단 계층화 연계 셀렉터 적용)
     function showAddItemModal() {
-        let rOpts = db.regions.map(r => `<option value="${r}">${r}</option>`).join('');
+        let cOpts = Object.keys(db.geoHierarchy).map(c => `<option value="${c}">${c}</option>`).join('');
         let scOpts = (db.subCategories[currentMainCategory] || []).map(sc => `<option value="${sc}">${sc}</option>`).join('');
 
-        openGlobalModal(`새로운 ${currentMainCategory} 엔티티 추가 등록`, `
-            <span class="text-[10px] text-orange-500 font-bold block">* 로컬 컴퓨터의 사진/이미지 파일을 아래 인풋으로 드래그 드롭하면 Base64 자동 업로드 호환됩니다.</span>
-            <input id="add-item-name" type="text" placeholder="관광지 명칭 / 숙소 이름 / 항공편" class="w-full border p-2 rounded-lg text-sm">
-            <select id="add-item-region" class="w-full border p-2 rounded-lg text-sm bg-white">${rOpts}</select>
+        openGlobalModal(`새로운 ${currentMainCategory} 엔티티 추가`, `
+            <span class="text-[10px] text-orange-500 font-bold block">* 로컬 컴퓨터의 사진 드래그 드롭 업로드 호환</span>
+            <input id="add-item-name" type="text" placeholder="명칭 입력" class="w-full border p-2 rounded-lg text-sm">
+            
+            <label class="text-[11px] font-bold text-gray-400">국가 선택</label>
+            <select id="add-item-country" onchange="updateModalGeoSelects('add')" class="w-full border p-2 rounded-lg text-sm bg-white">${cOpts}</select>
+            
+            <label class="text-[11px] font-bold text-gray-400">시/도 선택</label>
+            <select id="add-item-city" onchange="updateModalGeoSelects('add', true)" class="w-full border p-2 rounded-lg text-sm bg-white"></select>
+            
+            <label class="text-[11px] font-bold text-gray-400">시/군/구/동 선택</label>
+            <select id="add-item-district" class="w-full border p-2 rounded-lg text-sm bg-white"></select>
+            
             <select id="add-item-subcat" class="w-full border p-2 rounded-lg text-sm bg-white">${scOpts}</select>
             <input id="add-item-price" type="number" placeholder="예약 가상 금액 (숫자만)" class="w-full border p-2 rounded-lg text-sm">
-            <textarea id="add-item-desc" placeholder="세부 요약 가짜 설명 정보 기술" class="w-full border p-2 rounded-lg text-sm h-20"></textarea>
-            <input id="add-item-img" type="text" placeholder="사진 이미지 웹 링크 URL 또는 이미지 파일 드래그 드롭" 
-                class="w-full border p-2 rounded-lg text-sm bg-gray-50 focus:bg-white"
+            <textarea id="add-item-desc" placeholder="세부 요약 가짜 설명" class="w-full border p-2 rounded-lg text-sm h-16"></textarea>
+            <input id="add-item-img" type="text" placeholder="이미지 웹 링크 또는 파일 드래그" class="w-full border p-2 rounded-lg text-sm"
                 ondrop="handleImageDrop(event, 'add-item-img')" ondragover="onDragOver(event)" ondragleave="onDragLeave(event)">
         `, () => {
             const name = document.getElementById('add-item-name').value.trim();
-            const region = document.getElementById('add-item-region').value;
-            const subCat = document.getElementById('add-item-subcat').value;
-            const price = parseInt(document.getElementById('add-item-price').value) || 0;
-            const description = document.getElementById('add-item-desc').value;
-            const img = document.getElementById('add-item-img').value;
-
-            if(!name) return alert("식별 명칭은 필수항목입니다.");
-
+            if(!name) return alert("명칭은 필수항목입니다.");
+            
             db.travelItems.push({
-                id: Date.now(), mainCat: currentMainCategory, region, subCat, name, price, description, img, score: (4.0 + Math.random().toFixed(1))
+                id: Date.now(),
+                mainCat: currentMainCategory,
+                country: document.getElementById('add-item-country').value,
+                city: document.getElementById('add-item-city').value,
+                district: document.getElementById('add-item-district').value,
+                subCat: document.getElementById('add-item-subcat').value,
+                name: name,
+                price: parseInt(document.getElementById('add-item-price').value) || 0,
+                description: document.getElementById('add-item-desc').value,
+                img: document.getElementById('add-item-img').value,
+                score: (4.0 + Math.random().toFixed(1))
             });
             saveDB(); renderFilteredItemsGrid(); renderRecommendList(); closeGlobalModal();
         });
+
+        updateModalGeoSelects('add');
     }
 
-    // 여행 데이터 정보 수선 편집 수정 모달
+    // 모달 전용 3단계 연쇄 동적 셀렉터 스위칭 함수
+    function updateModalGeoSelects(modalType, cityOnly = false) {
+        const countryVal = document.getElementById(`${modalType}-item-country`).value;
+        const citySelect = document.getElementById(`${modalType}-item-city`);
+        const districtSelect = document.getElementById(`${modalType}-item-district`);
+
+        if(!cityOnly) {
+            citySelect.innerHTML = Object.keys(db.geoHierarchy[countryVal] || {}).map(ct => `<option value="${ct}">${ct}</option>`).join('');
+        }
+        
+        const cityVal = citySelect.value;
+        if(cityVal) {
+            districtSelect.innerHTML = (db.geoHierarchy[countryVal][cityVal] || []).map(d => `<option value="${d}">${d}</option>`).join('');
+        } else {
+            districtSelect.innerHTML = "<option value='미분류'>미분류</option>";
+        }
+    }
+
     function showEditItemModal(id) {
         const item = db.travelItems.find(t => t.id === id);
-        let rOpts = db.regions.map(r => `<option value="${r}" ${item.region === r ? 'selected':''}>${r}</option>`).join('');
+        let cOpts = Object.keys(db.geoHierarchy).map(c => `<option value="${c}" ${item.country === c ? 'selected':''}>${c}</option>`).join('');
         let scOpts = (db.subCategories[item.mainCat] || []).map(sc => `<option value="${sc}" ${item.subCat === sc ? 'selected':''}>${sc}</option>`).join('');
 
         openGlobalModal("기록 데이터 정보 수선", `
-            <span class="text-[10px] text-blue-500 font-bold block">* 사진 이미지 파일 드래그 드롭 덮어쓰기 지원</span>
             <input id="edit-item-name" type="text" value="${item.name}" class="w-full border p-2 rounded-lg text-sm">
-            <select id="edit-item-region" class="w-full border p-2 rounded-lg text-sm bg-white">${rOpts}</select>
+            
+            <label class="text-[11px] font-bold text-gray-400">국가</label>
+            <select id="edit-item-country" onchange="updateModalGeoSelects('edit')" class="w-full border p-2 rounded-lg text-sm bg-white">${cOpts}</select>
+            
+            <label class="text-[11px] font-bold text-gray-400">시/도</label>
+            <select id="edit-item-city" onchange="updateModalGeoSelects('edit', true)" class="w-full border p-2 rounded-lg text-sm bg-white"></select>
+            
+            <label class="text-[11px] font-bold text-gray-400">시/군/구/동</label>
+            <select id="edit-item-district" class="w-full border p-2 rounded-lg text-sm bg-white"></select>
+            
             <select id="edit-item-subcat" class="w-full border p-2 rounded-lg text-sm bg-white">${scOpts}</select>
             <input id="edit-item-price" type="number" value="${item.price}" class="w-full border p-2 rounded-lg text-sm">
-            <textarea id="edit-item-desc" class="w-full border p-2 rounded-lg text-sm h-20">${item.description}</textarea>
+            <textarea id="edit-item-desc" class="w-full border p-2 rounded-lg text-sm h-16">${item.description}</textarea>
             <input id="edit-item-img" type="text" value="${item.img || ''}" class="w-full border p-2 rounded-lg text-sm bg-gray-50"
                 ondrop="handleImageDrop(event, 'edit-item-img')" ondragover="onDragOver(event)" ondragleave="onDragLeave(event)">
         `, () => {
             item.name = document.getElementById('edit-item-name').value.trim();
-            item.region = document.getElementById('edit-item-region').value;
+            item.country = document.getElementById('edit-item-country').value;
+            item.city = document.getElementById('edit-item-city').value;
+            item.district = document.getElementById('edit-item-district').value;
             item.subCat = document.getElementById('edit-item-subcat').value;
             item.price = parseInt(document.getElementById('edit-item-price').value) || 0;
             item.description = document.getElementById('edit-item-desc').value;
@@ -561,16 +712,21 @@
 
             saveDB(); renderFilteredItemsGrid(); renderRecommendList(); closeGlobalModal();
         });
+
+        // 기존 값 강제 동기화 바인딩 매핑
+        updateModalGeoSelects('edit');
+        document.getElementById('edit-item-city').value = item.city;
+        updateModalGeoSelects('edit', true);
+        document.getElementById('edit-item-district').value = item.district;
     }
 
     function deleteTravelItem(id) {
-        if(confirm("해당 가짜 관광 요소를 영구 데이터베이스에서 말소 파기하시겠습니까?")) {
+        if(confirm("해당 가짜 관광 요소를 데이터베이스에서 말소 파기하시겠습니까?")) {
             db.travelItems = db.travelItems.filter(t => t.id !== id);
             saveDB(); renderFilteredItemsGrid(); renderRecommendList();
         }
     }
 
-    // 🔍 4) 가짜 상세 정보 뷰포트 바인딩 및 렌더링
     function showItemDetailView(id) {
         currentActiveItemId = id;
         const item = db.travelItems.find(t => t.id === id);
@@ -581,17 +737,16 @@
         
         infoBox.innerHTML = `
             <img src="${imgUrl}" class="w-full h-56 object-cover rounded-xl shadow-md mb-4 bg-gray-100">
-            <span class="text-xs font-black px-2.5 py-1 rounded-md bg-slate-900 text-white">${item.region} · ${item.subCat}</span>
+            <span class="text-xs font-black px-2.5 py-1 rounded-md bg-slate-900 text-white">${item.country} > ${item.city} > ${item.district}</span>
             <h2 class="text-2xl font-black text-gray-800 mt-2">${item.name}</h2>
-            <div class="flex items-center gap-2 mt-1 mb-3 text-xs text-gray-500 font-bold">
-                <span class="text-yellow-500">⭐ 평점 ${item.score}</span> | <span>리뷰 2,841개 반응</span>
+            <div class="flex items-center gap-2 mt-1 mb-3 text-xs text-gray-500">
+                <span class="text-yellow-500 font-bold">⭐ 평점 ${item.score}</span> | <span>리뷰 2,841개 반응</span>
             </div>
-            <p class="text-xs text-gray-600 leading-relaxed bg-gray-50 p-3 rounded-lg border">${item.description || '상세 사양 메타데이터 정보가 기술되지 않은 여정 항목입니다.'}</p>
+            <p class="text-xs text-gray-600 leading-relaxed bg-gray-50 p-3 rounded-lg border">${item.description || '상세 사양이 없습니다.'}</p>
         `;
 
         document.getElementById('detail-price-text').innerText = item.price > 0 ? `${item.price.toLocaleString()}원` : '비용 없음';
 
-        // 항공권 카테고리 전용 가짜 노선 스케줄 생성기 작동 제어
         const simBox = document.getElementById('flight-simulator-box');
         if(item.mainCat === "항공권") {
             simBox.classList.remove('hidden'); generateFakeFlightTickets(item);
@@ -606,24 +761,18 @@
             const row = document.createElement('div');
             row.className = "flex justify-between items-center p-3 border rounded-lg text-xs bg-slate-50";
             row.innerHTML = `
-                <div>
-                    <span class="font-black text-gray-700">${code}</span>
-                    <span class="text-gray-400 font-bold ml-2">08:${i}0 -> 10:20</span>
-                </div>
+                <div><span class="font-black text-gray-700">${code}</span><span class="text-gray-400 font-bold ml-2">08:${i}0 -> 10:20</span></div>
                 <span class="font-black text-orange-600">${(item.price + (i * 12000)).toLocaleString()}원</span>
             `;
             list.appendChild(row);
         });
     }
 
-    // 🧳 5) 보관함 아키텍처 제어
     function addItemToStorage() {
         const item = db.travelItems.find(t => t.id === currentActiveItemId);
-        db.storage.push({
-            id: Date.now(), originId: item.id, name: item.name, price: item.price, region: item.region
-        });
+        db.storage.push({ id: Date.now(), name: item.name, price: item.price, region: item.district });
         saveDB(); updateStorageBadgeCount();
-        alert(`[${item.name}] 항목을 가상 보관 플래너에 저장 완료했습니다.`);
+        alert(`[${item.name}] 보관 플래너에 저장 완료!`);
     }
 
     function updateStorageBadgeCount() {
@@ -637,7 +786,7 @@
         let sum = 0;
 
         if(db.storage.length === 0) {
-            container.innerHTML = "<p class='text-center py-10 text-gray-400 text-xs font-bold'>보관 플래너가 비어있습니다. 가짜 일정을 수집해 보세요!</p>";
+            container.innerHTML = "<p class='text-center py-10 text-gray-400 text-xs font-bold'>보관 플래너가 비어있습니다.</p>";
             totalText.innerText = "0원"; return;
         }
 
@@ -646,13 +795,10 @@
             const div = document.createElement('div');
             div.className = "flex justify-between items-center py-3 border-b last:border-0 text-xs";
             div.innerHTML = `
-                <div>
-                    <span class="text-[9px] text-gray-400 font-bold">[${item.region}]</span>
-                    <p class="font-bold text-gray-800">${item.name}</p>
-                </div>
+                <div><span class="text-[9px] text-gray-400 font-bold">[${item.region}]</span><p class="font-bold text-gray-800">${item.name}</p></div>
                 <div class="flex items-center gap-3">
                     <span class="font-black text-slate-700">${item.price > 0 ? item.price.toLocaleString()+'원' : '무료'}</span>
-                    <button onclick="removeStorageItem(${index})" class="text-red-500 font-bold text-sm hover:scale-110">×</button>
+                    <button onclick="removeStorageItem(${index})" class="text-red-500 font-bold text-sm">×</button>
                 </div>
             `;
             container.appendChild(div);
@@ -664,10 +810,8 @@
         db.storage.splice(index, 1); saveDB(); updateStorageBadgeCount(); renderStorageItems();
     }
 
-    // ⚡ 6) 가짜 실시간 예약 시뮬레이션 엔진 (핵심 요구사항 반영)
     function triggerFakeBookingSimulation() {
         showSection('booking-status-section');
-        
         const bar = document.getElementById('booking-progress-bar');
         const text = document.getElementById('status-headline');
         const failNotice = document.getElementById('simulation-fail-notice');
@@ -676,19 +820,16 @@
         text.innerText = "통신 인터페이스 암호화 세션 구성 중...";
         failNotice.classList.add('hidden');
 
-        setTimeout(() => { bar.style.width = "35%"; text.innerText = "가상 예약 슬롯 정합성 대조 점검 중..."; }, 600);
-        setTimeout(() => { bar.style.width = "70%"; text.innerText = "데이터 영속성 미러링 원격 인젝션 시도 중..."; }, 1400);
+        setTimeout(() => { bar.style.width = "35%"; text.innerText = "가상 계층형 예약 슬롯 정합성 대조 점검 중..."; }, 600);
+        setTimeout(() => { bar.style.width = "70%"; text.innerText = "데이터 원격 인젝션 프로토콜 시도 중..."; }, 1400);
         setTimeout(() => { 
             bar.style.width = "100%"; 
-            text.innerText = "⚠️ 가상 동기화 실패 (실제 예약 불가)";
+            text.innerText = "⚠️ 가상 예약 시뮬레이션 종료 (실제 예약 불가)";
             failNotice.classList.remove('hidden');
-            
-            // 시뮬레이션 안전 리셋 프로시저
             db.storage = []; saveDB(); updateStorageBadgeCount();
         }, 2200);
     }
 
-    // 드래그 앤 드롭 서브 엔진 유틸리티 내부 추상화
     function handleImageDrop(e, inputId) {
         e.preventDefault(); e.currentTarget.classList.remove('drag-over');
         const file = e.dataTransfer.files[0];
@@ -701,7 +842,6 @@
     function onDragOver(e) { e.preventDefault(); e.currentTarget.classList.add('drag-over'); }
     function onDragLeave(e) { e.currentTarget.classList.remove('drag-over'); }
 
-    // 공용 추상화 모달 제어 전역 프로토콜
     function openGlobalModal(title, content, onConfirm) {
         document.getElementById('modal-headline').innerText = title;
         document.getElementById('modal-body-content').innerHTML = content;
@@ -709,9 +849,8 @@
         document.getElementById('global-modal').classList.remove('hidden');
     }
     function closeGlobalModal() { document.getElementById('global-modal').classList.add('hidden'); }
-    function saveDB() { localStorage.setItem('yeogi_siro_db_v1', JSON.stringify(db)); }
+    function saveDB() { localStorage.setItem('yeogi_siro_db_v2', JSON.stringify(db)); }
 
-    // 앱 인스턴스 초기 구동 기동
     initApp();
 </script>
 
